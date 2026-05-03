@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 from flask import Flask, jsonify, request, send_file
@@ -16,9 +15,7 @@ from config import (  # noqa: E402
     FEATURE_COLS,
     LR_OUTPUT_DIR,
     LSTM_OUTPUT_DIR,
-    MODELS_DIR,
     OUTPUTS_DIR,
-    SEQ_LEN,
 )
 from data_loader import load_sp500  # noqa: E402
 from metrics import load_metrics  # noqa: E402
@@ -181,19 +178,24 @@ def predict_arima():
     payload = request.get_json(silent=True) or {}
     days = int(payload.get("days", 5))
     days = max(1, min(days, 30))
-    model_path = MODELS_DIR / "arima_sp500.pkl"
 
-    if not model_path.exists():
-        return jsonify({"error": "ARIMA model not found. Run model_arima_sp500.py first."}), 404
+    predictions_path = ARIMA_OUTPUT_DIR / "predictions.csv"
+    if not predictions_path.exists():
+        return jsonify({"error": "ARIMA prediction file not found. Run model_arima_sp500.py first."}), 404
 
-    model = joblib.load(model_path)
-    forecast = model.forecast(steps=days)
+    df = load_sp500()
+    predictions_df = pd.read_csv(predictions_path)
+    latest_close = float(df["Close"].iloc[-1])
+    recent_step = predictions_df["Predicted"].diff().dropna().tail(20).mean()
+    if not np.isfinite(recent_step):
+        recent_step = 0.0
+    forecast = [latest_close + (recent_step * (i + 1)) for i in range(days)]
     return jsonify(
         {
             "model": "ARIMA",
             "days": days,
             "forecast": [float(x) for x in forecast],
-            "note": "Forecast is generated from the fitted ARIMA model.",
+            "note": "Lightweight deployment forecast based on saved ARIMA prediction trend.",
         }
     )
 
@@ -204,31 +206,25 @@ def predict_lstm():
     days = int(payload.get("days", 1))
     days = max(1, min(days, 5))
 
-    model_path = MODELS_DIR / "lstm_sp500.keras"
-    scaler_path = MODELS_DIR / "lstm_sp500_scaler.pkl"
-    if not model_path.exists() or not scaler_path.exists():
-        return jsonify({"error": "LSTM model/scaler not found. Run model_lstm_sp500.py first."}), 404
-
-    from tensorflow.keras.models import load_model
-
     df = load_sp500()
-    scaler = joblib.load(scaler_path)
-    model = load_model(model_path)
-    scaled = scaler.transform(df[FEATURE_COLS].astype(float).to_numpy())
-    window = scaled[-SEQ_LEN:].copy()
+    predictions_path = LSTM_OUTPUT_DIR / "predictions.csv"
+    if not predictions_path.exists():
+        return jsonify({"error": "LSTM prediction file not found. Run model_lstm_sp500.py first."}), 404
+
+    predictions_df = pd.read_csv(predictions_path)
+    if "Predicted_Return" in predictions_df.columns:
+        pred_return = float(predictions_df["Predicted_Return"].tail(20).mean())
+    else:
+        pred_return = float(predictions_df["Predicted"].pct_change().tail(20).mean())
+    if not np.isfinite(pred_return):
+        pred_return = 0.0
+
     last_close = float(df["Close"].iloc[-1])
 
     forecasts = []
     for _ in range(days):
-        pred_return = float(model.predict(window.reshape(1, SEQ_LEN, len(FEATURE_COLS)), verbose=0)[0][0])
         pred_close = last_close * (1 + pred_return)
         forecasts.append(pred_close)
-
-        next_row = window[-1].copy()
-        dummy = np.zeros((1, len(FEATURE_COLS)))
-        dummy[0, 0] = pred_close
-        next_row[0] = scaler.transform(dummy)[0, 0]
-        window = np.vstack([window[1:], next_row])
         last_close = pred_close
 
     return jsonify(
@@ -236,7 +232,7 @@ def predict_lstm():
             "model": "LSTM",
             "days": days,
             "forecast": forecasts,
-            "note": "LSTM predicts next-day return from a 60-day sequence, then reconstructs Close from the latest Close.",
+            "note": "Lightweight deployment forecast based on saved LSTM prediction-return behavior.",
         }
     )
 

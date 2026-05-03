@@ -7,7 +7,5 @@ scikit-learn
 matplotlib
 seaborn
 statsmodels
-tensorflow
-keras
 joblib
 yfinance

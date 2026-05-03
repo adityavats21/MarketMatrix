@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: marketmatrix-backend
+    env: python
+    plan: free
+    buildCommand: cd MarketMatrix/backend && pip install -r requirements.txt
+    startCommand: cd MarketMatrix/backend && gunicorn api.app:app --bind 0.0.0.0:$PORT
+    autoDeploy: true

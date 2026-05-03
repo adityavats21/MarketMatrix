@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketMatrix</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-frame">
+      <header class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">MM</div>
+          <div>
+            <h1>MarketMatrix</h1>
+            <p>Stock intelligence lab</p>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary navigation">
+          <button class="nav-item active" data-view="predict">Predict</button>
+          <button class="nav-item" data-view="compare">Compare</button>
+          <button class="nav-item" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="about">About</button>
+        </nav>
+
+        <div class="connection-card">
+          <span>Backend</span>
+          <strong id="apiStatus">Checking</strong>
+          <input id="apiBase" value="http://127.0.0.1:5000" />
+          <button id="refreshBtn">Refresh</button>
+        </div>
+      </header>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">B.Tech CSE SDP Project</p>
+            <h2 id="viewTitle">Prediction Machine</h2>
+          </div>
+          <div class="topbar-actions">
+            <span id="datasetRange">S&P 500 dataset</span>
+          </div>
+        </header>
+
+        <section id="predict" class="view active">
+          <div class="hero-grid">
+            <section class="predict-machine">
+              <div class="machine-head">
+                <div>
+                  <p class="eyebrow">Forecast Console</p>
+                  <h3>S&P 500 Prediction Machine</h3>
+                </div>
+                <span id="winnerBadge" class="badge">LSTM leading</span>
+              </div>
+
+              <div class="control-grid">
+                <label>
+                  Model
+                  <select id="predictModel">
+                    <option value="lstm">LSTM</option>
+                    <option value="arima">ARIMA</option>
+                    <option value="lr">Linear Regression</option>
+                  </select>
+                </label>
+                <label>
+                  Horizon
+                  <select id="predictHorizon">
+                    <option value="1">1 trading day</option>
+                    <option value="60">60 trading days</option>
+                  </select>
+                </label>
+                <label>
+                  Days
+                  <input id="predictDays" type="number" min="1" max="60" value="1" />
+                </label>
+                <button id="predictBtn">Run Prediction</button>
+              </div>
+
+              <div class="result-strip">
+                <div>
+                  <span>Predicted Close</span>
+                  <strong id="predictedClose">-</strong>
+                </div>
+                <div>
+                  <span>Reference Actual</span>
+                  <strong id="actualClose">-</strong>
+                </div>
+                <div>
+                  <span>Error</span>
+                  <strong id="predictionError">-</strong>
+                </div>
+              </div>
+
+              <div id="forecastList" class="forecast-list"></div>
+            </section>
+
+            <section class="visual-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Real vs Predicted</p>
+                  <h3 id="predictionChartTitle">LSTM next-day behavior</h3>
+                </div>
+                <select id="predictionGraphSelect">
+                  <option value="/api/lstm/graphs/01_actual_vs_predicted">LSTM 1-day</option>
+                  <option value="/api/arima/graphs/01_actual_vs_predicted">ARIMA 1-day</option>
+                  <option value="/api/lr/graphs/01_actual_vs_predicted">LR 1-day</option>
+                  <option value="/api/experiment60/graphs/actual_vs_models_60day">All models 60-day</option>
+                </select>
+              </div>
+              <img id="predictionGraph" class="graph-img" alt="Prediction chart" />
+            </section>
+          </div>
+
+          <div class="insight-row">
+            <article>
+              <span>Next-day task</span>
+              <strong>LR, ARIMA, and LSTM stay close</strong>
+              <p>Index prices are highly continuous, so one-day price-level R2 remains high for all models.</p>
+            </article>
+            <article>
+              <span>60-day task</span>
+              <strong>LSTM separates clearly</strong>
+              <p>Longer horizons expose model weakness: LR collapses, ARIMA drifts, LSTM keeps useful temporal structure.</p>
+            </article>
+            <article>
+              <span>Final position</span>
+              <strong>Educational forecasting system</strong>
+              <p>The app demonstrates model behavior, not real trading advice.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="compare" class="view">
+          <div class="section-band">
+            <div>
+              <p class="eyebrow">Model Arena</p>
+              <h3>Compare LR, ARIMA, and LSTM</h3>
+            </div>
+            <select id="comparisonMode">
+              <option value="one">Next-day comparison</option>
+              <option value="sixty">60-day horizon comparison</option>
+            </select>
+          </div>
+
+          <div class="metric-board" id="comparisonCards"></div>
+
+          <div class="compare-grid">
+            <section class="visual-panel span-2">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Overlay</p>
+                  <h3 id="overlayTitle">Actual vs model lines</h3>
+                </div>
+              </div>
+              <img id="overlayGraph" class="graph-img tall" alt="Model overlay chart" />
+            </section>
+
+            <section class="visual-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Metric Chart</p>
+                  <h3>Score visualization</h3>
+                </div>
+                <select id="metricGraphSelect"></select>
+              </div>
+              <img id="metricGraph" class="graph-img" alt="Metric chart" />
+            </section>
+
+            <section class="table-panel">
+              <div>
+                <p class="eyebrow">Metrics Table</p>
+                <h3>Numerical comparison</h3>
+              </div>
+              <div id="comparisonTable" class="data-table"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="dashboard" class="view">
+          <div class="metric-board">
+            <article class="metric-card">
+              <span>Instrument</span>
+              <strong>S&P 500 Index</strong>
+              <p>Yahoo Finance ticker: ^GSPC</p>
+            </article>
+            <article class="metric-card">
+              <span>Usable rows</span>
+              <strong id="datasetRows">-</strong>
+              <p>After technical indicators and NaN cleanup</p>
+            </article>
+            <article class="metric-card">
+              <span>Feature count</span>
+              <strong>14</strong>
+              <p>Close, RSI, bands, momentum, returns, volatility</p>
+            </article>
+            <article class="metric-card">
+              <span>Window</span>
+              <strong>60 days</strong>
+              <p>Historical lookback used by sequence models</p>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="visual-panel span-2">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Exploratory Data Analysis</p>
+                  <h3>Market structure and indicators</h3>
+                </div>
+                <select id="edaGraphSelect">
+                  <option value="/api/eda/graphs/01_sp500_closing_price">Closing Price</option>
+                  <option value="/api/eda/graphs/02_sp500_daily_returns">Daily Returns</option>
+                  <option value="/api/eda/graphs/03_sp500_moving_averages">Moving Averages</option>
+                  <option value="/api/eda/graphs/04_sp500_bollinger_bands">Bollinger Bands</option>
+                  <option value="/api/eda/graphs/05_sp500_rsi">RSI</option>
+                  <option value="/api/eda/graphs/06_sp500_correlation_heatmap">Correlation Heatmap</option>
+                </select>
+              </div>
+              <img id="edaGraph" class="graph-img tall" alt="EDA graph" />
+            </section>
+
+            <section class="story-panel">
+              <p class="eyebrow">Experiment Design</p>
+              <h3>Why the horizon matters</h3>
+              <p class="story-lead">
+                MarketMatrix does not only show a single accuracy number. It demonstrates how model behavior changes when the prediction task becomes harder.
+              </p>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <span>1</span>
+                  <div>
+                    <strong>Next-day prediction</strong>
+                    <p>All three models perform closely because S&P 500 prices are highly continuous from one trading day to the next.</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span>60</span>
+                  <div>
+                    <strong>60-day horizon prediction</strong>
+                    <p>The harder horizon exposes model limitations: Linear Regression becomes unstable, ARIMA drifts, and LSTM gives the strongest long-horizon fit.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="about" class="view">
+          <div class="about-hero">
+            <p class="eyebrow">MarketMatrix Intelligence Suite</p>
+            <h3>Sequence-driven market forecasting for S&P 500 analysis</h3>
+            <p>
+              MarketMatrix is an academic stock-market analysis system built to study how classical statistics,
+              machine learning, and deep learning behave on real financial time-series data. The platform uses
+              S&P 500 index data, engineers technical indicators, trains LR, ARIMA, and LSTM models, and presents
+              the results through a polished dashboard designed for evaluation, explanation, and comparison.
+            </p>
+          </div>
+
+          <div class="project-pillars">
+            <article>
+              <span>01</span>
+              <h3>Data Foundation</h3>
+              <p>Uses roughly ten years of S&P 500 index data with returns, moving averages, Bollinger Bands, RSI, volatility, momentum, and price-range indicators.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Modeling Layer</h3>
+              <p>Compares Linear Regression, ARIMA, and LSTM across next-day and 60-day horizon experiments to show how forecast difficulty changes model behavior.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Presentation Layer</h3>
+              <p>Turns backend outputs into professor-friendly visual evidence: prediction machines, line overlays, metric tables, EDA charts, and experiment summaries.</p>
+            </article>
+          </div>
+
+          <div class="about-grid">
+            <section class="stack-panel">
+              <p class="eyebrow">Backend Engine</p>
+              <h3>Data, modeling, and API pipeline</h3>
+              <div class="tech-grid">
+                <div>
+                  <strong>Core</strong>
+                  <p>Python, Flask, Flask-CORS, REST endpoints</p>
+                </div>
+                <div>
+                  <strong>Data</strong>
+                  <p>pandas, NumPy, yfinance, technical indicators</p>
+                </div>
+                <div>
+                  <strong>Models</strong>
+                  <p>scikit-learn, statsmodels ARIMA, TensorFlow, Keras LSTM</p>
+                </div>
+                <div>
+                  <strong>Outputs</strong>
+                  <p>Matplotlib, Seaborn, Joblib, PNG charts, CSV metrics</p>
+                </div>
+              </div>
+            </section>
+            <section class="stack-panel">
+              <p class="eyebrow">Frontend Experience</p>
+              <h3>Interactive project dashboard</h3>
+              <div class="tech-grid">
+                <div>
+                  <strong>Interface</strong>
+                  <p>HTML5, CSS3, JavaScript, responsive layout</p>
+                </div>
+                <div>
+                  <strong>Interaction</strong>
+                  <p>Predict page, model selector, horizon selector, dynamic API calls</p>
+                </div>
+                <div>
+                  <strong>Visualization</strong>
+                  <p>Real-vs-predicted charts, comparison tables, EDA graph viewer</p>
+                </div>
+                <div>
+                  <strong>Design Goal</strong>
+                  <p>Premium academic demo focused on clarity, confidence, and evaluation storytelling</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="credit-panel">
+            <span>Developed by</span>
+            <strong>ADITYA VATS, JAYSH TODI AND AKUL KUMAR</strong>
+            <p>BTECH VIT CSE SDP PROJECT</p>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

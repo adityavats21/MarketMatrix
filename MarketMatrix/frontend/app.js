@@ -1,5 +1,5 @@
 const state = {
-  apiBase: localStorage.getItem("marketmatrixApiBase") || "http://127.0.0.1:5000",
+  apiBase: localStorage.getItem("marketmatrixApiBase") || "https://marketmatrix-backend.onrender.com",
   oneDayMetrics: [],
   sixtyDayMetrics: [],
   dataset: null,

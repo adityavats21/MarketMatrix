@@ -1,5 +1,20 @@
+const DEFAULT_API_BASE = "https://marketmatrix-backend.onrender.com";
+
+function getInitialApiBase() {
+  const savedApiBase = localStorage.getItem("marketmatrixApiBase");
+  const isPublicSite = !["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const savedIsLocal = savedApiBase && /https?:\/\/(localhost|127\.0\.0\.1)/.test(savedApiBase);
+
+  if (isPublicSite && savedIsLocal) {
+    localStorage.setItem("marketmatrixApiBase", DEFAULT_API_BASE);
+    return DEFAULT_API_BASE;
+  }
+
+  return savedApiBase || DEFAULT_API_BASE;
+}
+
 const state = {
-  apiBase: localStorage.getItem("marketmatrixApiBase") || "https://marketmatrix-backend.onrender.com",
+  apiBase: getInitialApiBase(),
   oneDayMetrics: [],
   sixtyDayMetrics: [],
   dataset: null,

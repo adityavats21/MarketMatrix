@@ -177,4 +177,4 @@ Leakage-free baseline using flattened 60-day technical-feature windows. Fails at
 ## Author
 
 **Aditya Vats**
-[GitHub](https://github.com/adityavats21) · [LinkedIn]([https://linkedin.com/in/adityavats21](https://www.linkedin.com/in/aditya-vats-760353247/))
+[GitHub](https://github.com/adityavats21) · [LinkedIn](https://linkedin.com/in/adityavats21)
